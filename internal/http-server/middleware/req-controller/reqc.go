@@ -11,24 +11,24 @@ import (
 
 type ReqCounter struct {
 	m  sync.Map
-	rl LimitOptions
+	rl RateLimit
 }
 
 type UserControl struct {
-	msgCounter  int32
-	lastMsgTime int64 // хранить время в наносекундах
-	bannedUntil int64 // хранить время в наносекундах
+	msgCounter  uint32
+	lastMsgTime uint64 // хранить время в наносекундах
+	bannedUntil uint64 // хранить время в наносекундах
 }
 
-type LimitOptions struct {
-	limit    uint
+type RateLimit struct {
+	limit    uint32
 	interval time.Duration
 	banTime  time.Duration
 }
 
 func New(limit config.ReqLimit) *ReqCounter {
 	return &ReqCounter{
-		rl: LimitOptions{
+		rl: RateLimit{
 			limit:    limit.MaxNumReq,
 			interval: limit.TimeSlice,
 			banTime:  limit.BanTime,
@@ -54,7 +54,7 @@ func (rc *ReqCounter) Checking() gin.HandlerFunc {
 func (rc *ReqCounter) processor(username string) bool {
 	userInfo, loaded := rc.m.LoadOrStore(username, &UserControl{
 		msgCounter:  1,
-		lastMsgTime: time.Now().UnixNano(),
+		lastMsgTime: uint64(time.Now().UnixNano()),
 	})
 	if !loaded {
 		return true
@@ -62,15 +62,15 @@ func (rc *ReqCounter) processor(username string) bool {
 
 	user := userInfo.(*UserControl)
 
-	bannedUntil := atomic.LoadInt64(&user.bannedUntil)
-	if bannedUntil > time.Now().UnixNano() {
+	bannedUntil := atomic.LoadUint64(&user.bannedUntil)
+	if bannedUntil > uint64(time.Now().UnixNano()) {
 		return false
 	}
 
-	lastMsgTime := atomic.LoadInt64(&user.lastMsgTime)
-	if time.Since(time.Unix(0, lastMsgTime)) < rc.rl.interval {
+	lastMsgTime := atomic.LoadUint64(&user.lastMsgTime)
+	if time.Since(time.Unix(0, int64(lastMsgTime))) < rc.rl.interval {
 
-		if atomic.LoadInt32(&user.msgCounter) >= int32(rc.rl.limit) {
+		if atomic.LoadUint32(&user.msgCounter) >= rc.rl.limit {
 
 			user.Ban(time.Now().Add(rc.rl.banTime))
 
@@ -86,16 +86,16 @@ func (rc *ReqCounter) processor(username string) bool {
 	return true
 }
 
-func (u *UserControl) Add(number uint) {
-	atomic.AddInt32(&u.msgCounter, int32(number))
+func (u *UserControl) Add(number uint32) {
+	atomic.AddUint32(&u.msgCounter, number)
 }
 
 func (u *UserControl) Reset() {
-	atomic.StoreInt32(&u.msgCounter, 1)
-	atomic.StoreInt64(&u.lastMsgTime, time.Now().UnixNano())
+	atomic.StoreUint32(&u.msgCounter, 1)
+	atomic.StoreUint64(&u.lastMsgTime, uint64(time.Now().UnixNano()))
 }
 
 func (u *UserControl) Ban(bannedUntil time.Time) {
-	atomic.StoreInt32(&u.msgCounter, 0)
-	atomic.StoreInt64(&u.bannedUntil, bannedUntil.UnixNano())
+	atomic.StoreUint32(&u.msgCounter, 0)
+	atomic.StoreUint64(&u.bannedUntil, uint64(bannedUntil.UnixNano()))
 }

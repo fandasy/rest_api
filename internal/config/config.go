@@ -37,7 +37,7 @@ type HttpServer struct {
 }
 
 type ReqLimit struct {
-	MaxNumReq uint          `yaml:"max_num_req"`
+	MaxNumReq uint32        `yaml:"max_num_req"`
 	TimeSlice time.Duration `yaml:"time_slice"`
 	BanTime   time.Duration `yaml:"ban_time"`
 }

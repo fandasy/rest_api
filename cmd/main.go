@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"github.com/gin-gonic/gin"
 	"log/slog"
@@ -20,6 +21,7 @@ import (
 	"restApi/internal/storage/psql"
 	"restApi/pkg/e"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -93,7 +95,11 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			panic(e.Wrap("failed to start http server", err))
+			if errors.Is(err, http.ErrServerClosed) {
+				log.Info("server closed")
+			} else {
+				panic(e.Wrap("failed to start http server", err))
+			}
 		}
 	}()
 
@@ -103,6 +109,14 @@ func main() {
 	sign := <-stop
 	log.Info("server stopping", slog.Any("signal", sign))
 
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Info("server shutdown", slog.Any("error", err))
+	}
+
+	log.Info("server shutdown")
 }
 
 func mustGetConfigPath() string {

@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func testLimitOptions(m uint, t time.Duration, b time.Duration) LimitOptions {
-	return LimitOptions{
+func testLimitOptions(m uint32, t time.Duration, b time.Duration) RateLimit {
+	return RateLimit{
 		limit:    m,
 		interval: t,
 		banTime:  b,
@@ -19,7 +19,7 @@ func TestReqCounter_Checking_SingleUser(t *testing.T) {
 		reqNum    int
 		sleepTime time.Duration
 		username  string
-		options   LimitOptions
+		options   RateLimit
 	}
 	tests := []struct {
 		name string
@@ -101,7 +101,7 @@ func TestReqCounter_Checking_ManyUsers(t *testing.T) {
 	}
 	type args struct {
 		users   []user
-		options LimitOptions
+		options RateLimit
 	}
 	tests := []struct {
 		name              string

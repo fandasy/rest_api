@@ -38,11 +38,13 @@ func Get(ctx context.Context, url string, compressionPercentage float64, maxWidt
 	req.Close = true
 
 	resp, err := http.DefaultClient.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+
 	if err != nil {
 		return nil, e.Wrap(op, err)
 	}
-
-	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, e.Wrap(op, ErrPageNotFound)
