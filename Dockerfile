@@ -3,20 +3,20 @@ FROM golang:1.23 AS builder
 WORKDIR /app
 
 COPY go.mod go.sum ./
+
 RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o myapp ./cmd/main.go
+RUN go build -o main ./cmd/main.go
 
 FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates
 
-COPY --from=builder /app/myapp /myapp
+COPY --from=builder /app/main .
 
-WORKDIR /
+ENV CONFG_PATH=/path/to/config \
+    GIN_MODE=release
 
-EXPOSE 8082
-
-CMD ["/myapp"]
+CMD ["./main"]
