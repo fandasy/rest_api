@@ -12,9 +12,7 @@ import (
 	"image/color"
 	"image/draw"
 	"image/jpeg"
-	_ "image/jpeg"
 	"image/png"
-	_ "image/png"
 	"net/http"
 	"restApi/pkg/e"
 	"restApi/pkg/validate"
@@ -140,10 +138,12 @@ func generateASCIIImage(img image.Image, chars string) *image.RGBA {
 func getCharFromBrightness(c color.Color, chars string) string {
 	r, g, b, _ := c.RGBA()
 
-	avg := (r + g + b) >> 8 // сдвиг вправо для получения 8-битного значения
-	brightness := float64(avg) / 255.0
+	r = r >> 8
+	g = g >> 8
+	b = b >> 8
 
-	idx := int(brightness * float64(len(chars)-1))
+	brightness := (r + g + b) / 3
+	idx := int(float64(brightness) / 255 * float64(len(chars)))
 
 	if idx < 0 {
 		idx = 0
