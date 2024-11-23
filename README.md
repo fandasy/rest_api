@@ -10,6 +10,35 @@
 
 Поддерживаемые форматы png, jpg, jpeg, webp
 
+Запуск
+---
+
+Для запуска rest api можно использовать docker-compose файл, с заранее настроенным local.yaml
+Требования: Docker
+
+Перейдите в директорию проекта и пропишите в консоли
+```
+docker-compose up --build
+```
+
+После сообщения "server starting", 
+можете отправлять запросы любым удобным для вас способом (Postman, curl, web)
+
+Тестовые POST запросы ./example-request
+
+Запросы GET отправляются в формате localhost:8082/id/{id_number}
+
+```
+POST localhost:8082/url
+Body: json
+{
+  "url": "https://example.com/img.jpg",
+  "compression_percentage": 0.5   # Не обязательно
+}
+
+GET localhost:8082/id/1
+```
+
 YAML
 ---
 ```
@@ -45,15 +74,4 @@ req_limit:
 local - text, уровень Debug, вывод в консоль
 dev   - json, уровень Debug, вывод в консоль
 prod  - json, уровень Info,  вывод в консоль
-```
-
-Запуск
----
-
-Для запуска rest api существует два варианта:
-- Запустить в консоли с флагами: -config
-- Использовать переменные среды: CONFIG_PATH
-
-```
-start name.exe -config local.yaml
 ```

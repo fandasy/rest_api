@@ -1,1 +1,0 @@
-start main.exe -config local.yaml
